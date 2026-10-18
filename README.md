@@ -1,6 +1,6 @@
 # 🎨 Whiteboard
 
-> A production-grade real-time collaborative infinite canvas platform powered by CRDT (Yjs), distributed microservices (stateless REST API + stateful WebSocket Collab server), PostgreSQL relational storage via Prisma, Redis caching and pub/sub cluster replication, and MinIO S3 object storage.
+> Plataforma completa de quadro branco infinito com sincronização multiusuário em tempo real orientada a CRDT (Yjs), arquitetura distribuída em microsserviços (API REST stateless + Collab WebSocket server), persistência relacional com PostgreSQL/Prisma, cache Redis e armazenamento de objetos MinIO/S3.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.4-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -10,40 +10,39 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-
 ---
 
 <div align="center">
   <img src="docs/images/architecture-board-preview.png" alt="Whiteboard Interactive Studio & Real-Time Architecture Preview" width="100%" />
-  <p><em>System architecture diagram and interactive preview rendered directly on the Whiteboard 2D canvas engine</em></p>
+  <p><em>Quadro de arquitetura do sistema e preview interativo renderizado diretamente na engine 2D do Whiteboard</em></p>
 </div>
 
 ---
 
-## 📋 About The Project
+## 📋 Sobre o Projeto
 
-**Whiteboard** is a high-performance visual collaboration platform engineered for absolute data consistency across distributed clients. Inspired by industry-leading tools like Miro, Figma, and Excalidraw, Whiteboard implements a **custom 2D canvas rendering engine** and adopts **CRDTs (Conflict-free Replicated Data Types)** via the [Yjs](https://github.com/yjs/yjs) ecosystem to ensure seamless concurrent editing with mathematical convergence, zero data collisions, and low latency.
+O **Whiteboard** é uma plataforma de colaboração visual em tempo real projetada com foco em alta performance, robustez e consistência de dados distribuídos. Inspirado nas melhores experiências de ferramentas como Miro, Figma e Excalidraw, o projeto implementa uma **engine de canvas 2D proprietária** e adota o padrão **CRDT (Conflict-free Replicated Data Types)** através do ecossistema [Yjs](https://github.com/yjs/yjs) para garantir que múltiplos usuários desenhem, escrevam e organizem elementos no mesmo quadro simultaneamente, sem colisões de dados e com baixa latência.
 
 ---
 
-## 🌐 Local Services & Endpoints Reference
+## 🌐 Demonstração Local & Serviços
 
-When starting the local environment, the following services are available:
+Ao subir o ecossistema localmente, os seguintes serviços estarão disponíveis:
 
-| Service | Connection / URL | Description | Default Credentials / Notes |
+| Serviço | URL / Conexão | Descrição | Credenciais / Notas |
 | :--- | :--- | :--- | :--- |
-| **Frontend Studio** | [http://localhost:3000](http://localhost:3000) | Web studio & interactive 2D canvas | Interactive drawing and collaboration |
-| **REST API** | [http://localhost:3001](http://localhost:3001) | Stateless NestJS API (`/v1/*`) | Authentication, board CRUD, presigned URLs |
-| **Swagger UI** | [http://localhost:3001/v1/docs](http://localhost:3001/v1/docs) | Interactive OpenAPI documentation | Complete endpoint catalogue and schemas |
-| **Collab Server** | `ws://localhost:3002/collab` | Stateful WebSocket server (NestJS + Yjs) | Real-time room synchronization & awareness |
-| **MinIO Console** | [http://localhost:9001](http://localhost:9001) | S3 Object Storage Dashboard | User: `minio` \| Pass: `minio12345` |
-| **MinIO API** | [http://localhost:9000](http://localhost:9000) | S3 endpoint for direct file uploads | Default bucket: `whiteboard-assets` |
-| **PostgreSQL** | `localhost:5442` | Relational database (Prisma) | User: `whiteboard` \| Pass: `whiteboard123` |
-| **Redis** | `localhost:6379` | In-memory cache & Pub/Sub cluster | Session management and multi-pod replication |
+| **Frontend** | [http://localhost:3000](http://localhost:3000) | Aplicação Web / Whiteboard Studio | Interface do usuário e canvas interativo |
+| **API REST** | [http://localhost:3001](http://localhost:3001) | Servidor REST (NestJS) | Rotas de autenticação, boards e assets |
+| **Swagger Docs** | [http://localhost:3001/v1/docs](http://localhost:3001/v1/docs) | Documentação OpenAPI interativa | Catálogo completo de endpoints e schemas |
+| **Collab Server** | `ws://localhost:3002/collab` | Gateway WebSocket (NestJS + Yjs) | Sincronização em tempo real por sala |
+| **MinIO Console** | [http://localhost:9001](http://localhost:9001) | Dashboard do Object Storage S3 | Usuário: `minio` \| Senha: `minio12345` |
+| **MinIO API** | [http://localhost:9000](http://localhost:9000) | Endpoint S3 de assets e uploads | Bucket padrão: `whiteboard-assets` |
+| **PostgreSQL** | `localhost:5442` | Banco de Dados Relacional | Usuário: `wb` \| Senha: `wb` \| Banco: `whiteboard` |
+| **Redis** | `localhost:6379` | Cache e Pub/Sub em memória | Gerenciamento de sessões e presença |
 
 ---
 
-## 🧱 System Architecture
+## 🧱 Arquitetura do Sistema
 
 ```mermaid
 flowchart LR
@@ -54,8 +53,8 @@ flowchart LR
   end
 
   subgraph BE["Backend (NestJS 11)"]
-    API["Stateless REST API /v1<br/>(Port 3001)"]
-    COL["Stateful Collab Server<br/>(Port 3002)"]
+    API["API REST /v1<br/>(Stateless - Porta 3001)"]
+    COL["Collab Server<br/>(Stateful por sala - Porta 3002)"]
     PW["Persistence Worker<br/>(Debounced Snapshots)"]
   end
 
@@ -64,7 +63,7 @@ flowchart LR
   S3[("MinIO S3<br/>(Object Storage)")]
 
   UI -->|HTTPS / REST| API
-  SP <-->|WSS + Ephemeral Ticket| COL
+  SP <-->|WSS + Ticket Efêmero| COL
   API --> PG
   API --> RD
   API -->|Presigned URL| S3
@@ -73,170 +72,219 @@ flowchart LR
   UI -->|Direct Upload| S3
 ```
 
-### Architectural Principles
+### Princípios da Arquitetura
 
-1. **Stateless vs. Stateful Isolation**: The REST API manages account lifecycles, permissions, and metadata in a purely stateless manner, allowing seamless horizontal scaling. The Collab Server maintains active room documents in memory only while WebSocket clients are connected, persisting debounced snapshots to PostgreSQL.
-2. **Authoritative Server Shadow Document**: While client canvas rendering is optimistic and immediate, the Collab Server maintains an authoritative Shadow Document that validates every delta against Zod schemas, spatial limits, and room element caps (5,000 nodes).
-3. **Two Autonomous Repositories**: The frontend and backend maintain isolated Git submodules with dedicated dependencies, build steps, and deployment pipelines.
-
----
-
-## 🚀 Quickstart
-
-### Prerequisites
-
-Ensure the following tools are installed:
-- [Node.js](https://nodejs.org/) (`20.x` or `22.x` LTS)
-- [npm](https://www.npmjs.com/) (`10.x+`)
-- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/) v2+
-- [Make](https://www.gnu.org/software/make/)
+1. **Separação Stateless vs. Stateful**: A API REST cuida do ciclo de vida das contas, permissões e metadados de forma puramente stateless, podendo escalar horizontalmente. O servidor Collab mantém as salas ativas na memória apenas enquanto houver conexões WebSocket ativas, persistindo snapshots no Postgres periodicamente.
+2. **Autoridade Híbrida com CRDT**: A renderização e a edição no canvas são imediatas e sem latência percebida para o usuário (otimista). O servidor atua como autoridade para verificação de permissões e broadcast dos deltas binários compactados.
+3. **Desacoplamento em 2 Repositórios Git**: O frontend e o backend possuem ciclos de vida e dependências separadas, permitindo deploy independente e autonomia de desenvolvimento.
 
 ---
 
-### Option 1: Run All Services via Docker Compose (Recommended)
+## 🚀 Início Rápido
 
-Starts all containers (database, cache, S3, migrations, API, Collab, and Frontend) in a single step:
+### Pré-requisitos
 
-1. **Clone the repository with submodules**
+Certifique-se de ter instalado em seu ambiente:
+- [Node.js](https://nodejs.org/) (versão 22 ou superior)
+- [npm](https://www.npmjs.com/) (versão 10 ou superior)
+- [Docker](https://www.docker.com/get-started) e [Docker Compose](https://docs.docker.com/compose/)
+- [Make](https://www.gnu.org/software/make/) (disponível por padrão no Linux/macOS)
+
+---
+
+### Opção 1: Subir tudo com Docker Compose (Recomendado)
+
+Esta opção inicializa todos os containers (banco, cache, S3, migrações, API, Collab e Frontend) em uma única etapa:
+
+1. **Clone o repositório completo**
    ```bash
-   git clone --recurse-submodules https://github.com/GabrielFeijo/whiteboard.git
+   git clone https://github.com/GabrielFeijo/whiteboard.git
    cd whiteboard
    ```
 
-2. **Configure environment and boot containers**
+2. **Crie o arquivo de ambiente e inicialize os containers**
    ```bash
    make env
    make up
    ```
 
-3. **Check container health**
+3. **Verifique o status dos serviços**
    ```bash
    make ps
    ```
 
-4. **Access the services**
-   - Frontend Studio: [http://localhost:3000](http://localhost:3000)
-   - Swagger API Docs: [http://localhost:3001/v1/docs](http://localhost:3001/v1/docs)
-   - MinIO Storage Console: [http://localhost:9001](http://localhost:9001)
+4. **Acesse as interfaces**
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - Swagger API: [http://localhost:3001/v1/docs](http://localhost:3001/v1/docs)
+   - MinIO Console: [http://localhost:9001](http://localhost:9001)
 
 ---
 
-### Option 2: Local Development with Hot Reload
+### Opção 2: Desenvolvimento Local com Hot Reload
 
-For rapid development workflows:
+Para quem vai alterar código frequentemente no frontend ou backend:
 
-1. **Start infrastructure dependencies (Postgres, Redis, MinIO)**
+1. **Suba apenas as dependências de infraestrutura (Postgres, Redis, MinIO)**
    ```bash
    make deps
    ```
 
-2. **Run migrations and seed the database**
+2. **Configure e inicialize o Backend (Terminal 1 - API)**
    ```bash
-   npm --prefix backend run prisma:migrate
-   npm --prefix backend run db:seed
+   cd backend
+   cp .env.example .env
+   npm ci
+   npx prisma migrate dev
+   npm run start:api:dev
    ```
 
-3. **Start development servers**
+3. **Inicialize o Servidor Collab (Terminal 2 - WebSocket)**
    ```bash
-   # Run both backend and frontend concurrently
-   make dev
+   cd backend
+   npm run start:collab:dev
+   ```
+
+4. **Configure e inicialize o Frontend (Terminal 3 - Next.js)**
+   ```bash
+   cd frontend
+   cp .env.example .env.local
+   npm ci
+   npm run dev
    ```
 
 ---
 
-## 📦 Workspace Topology
+## 📦 Estrutura do Workspace
 
 ```text
 whiteboard/
-├── backend/                      # NestJS 11 API and Collab Server submodule
-│   ├── prisma/                   # Relational schema and migrations
+├── backend/                      # Repositório da API REST e Servidor Collab (NestJS)
+│   ├── prisma/                   # Schema relacional e migrations PostgreSQL
 │   ├── src/
-│   │   ├── core/                 # Prisma, Redis, S3, and Observability
-│   │   ├── modules/              # Auth, Boards, Assets, Collab, and Persistence
-│   │   ├── shared/               # Authoritative contract source of truth (Zod, Types, Protocol)
-│   │   ├── main.api.ts           # REST API entrypoint (Port 3001)
-│   │   └── main.collab.ts        # Collab WebSocket server entrypoint (Port 3002)
+│   │   ├── core/                 # Banco, Redis, S3 e Observabilidade
+│   │   ├── modules/              # Auth, Boards, Assets, Collab e Persistence
+│   │   ├── shared/               # Fonte da verdade do contrato (Tipos, Zod, Protocolo)
+│   │   ├── main.api.ts           # Ponto de entrada da API REST
+│   │   └── main.collab.ts        # Ponto de entrada do WebSocket Collab Server
 │   └── package.json
 │
-├── frontend/                     # Next.js 16 Web Studio submodule
+├── frontend/                     # Repositório da Aplicação Web e Canvas (Next.js 16)
 │   ├── src/
-│   │   ├── app/                  # App Router pages and layouts
-│   │   ├── canvas/               # Custom 2D Canvas Engine, Spatial Index, Renderers, and Tools
-│   │   ├── collab/               # WebSocket Sync Provider, Awareness, and Undo Manager
-│   │   ├── features/             # Domain modules (auth, boards, studio, share)
-│   │   ├── i18n/                 # Translation dictionaries (PT/EN)
-│   │   └── shared/               # Synchronized contract replica from backend
+│   │   ├── app/                  # App Router, páginas e layouts
+│   │   ├── canvas/               # Engine 2D própria, Spatial Index, Renderers e Tools
+│   │   ├── collab/               # Sync Provider WebSocket, Awareness e Undo Manager
+│   │   ├── features/             # Módulos funcionais (auth, boards, studio, share)
+│   │   ├── i18n/                 # Dicionários pt/en e tradução reativa
+│   │   └── shared/               # Cópia sincronizada do contrato do backend
 │   └── package.json
 │
-├── docs/                         # Architecture, guides, and ADRs
-│   ├── adr/                      # Architecture Decision Records
-│   ├── architecture.md           # System architecture specification
-│   ├── DEVELOPMENT.md            # Local developer guide
-│   ├── TESTING.md                # Testing handbook
-│   ├── PROTOCOL.md               # Real-time CRDT & WebSocket protocol specification
-│   ├── CONTRIBUTING.md           # Contribution and submodule guidelines
-│   └── tasks/                    # Epic and task backlog
+├── docs/                         # Documentação técnica e ADRs (Architecture Decision Records)
+│   ├── adr/                      # Decisões arquiteturais registradas
+│   ├── architecture.md           # Diagramas detalhados de arquitetura
+│   └── tasks/                    # Detalhamento de backlog e épicos
 │
-├── docker-compose.yml            # Complete orchestration (App + Infrastructure)
-├── docker-compose.deps.yml       # Infrastructure-only orchestration
-├── Makefile                      # Developer and agent task harness
-├── AGENTS.md                     # Master guidelines and invariants for AI agents
-├── CLAUDE.md                     # Claude Code CLI operational guide
-├── .cursorrules                  # Cursor IDE agent instructions
-└── README.md                     # Root project documentation
+├── docker-compose.yml            # Orquestração de todos os serviços (App + Infra)
+├── docker-compose.deps.yml       # Orquestração isolada apenas da infraestrutura
+├── Makefile                      # Automação de tarefas para o desenvolvedor
+└── README.md                     # Documentação mestre do projeto
 ```
 
 ---
 
-## 📝 Makefile Commands
+## 🔧 Configuração de Ambiente
 
-A unified `Makefile` automates all common developer tasks:
+O arquivo `.env` na raiz do projeto orquestra a execução de todos os containers no Docker Compose:
+
+```env
+# Banco de Dados PostgreSQL
+POSTGRES_USER=wb
+POSTGRES_PASSWORD=wb
+POSTGRES_DB=whiteboard
+POSTGRES_PORT=5442
+DATABASE_URL=postgresql://wb:wb@postgres:5432/whiteboard
+
+# Cache e PubSub Redis
+REDIS_PORT=6379
+REDIS_URL=redis://redis:6379
+
+# Segurança e Autenticação
+JWT_ACCESS_SECRET=change-me-with-at-least-32-characters-please
+JWT_ACCESS_TTL=900
+REFRESH_COOKIE_NAME=wb_refresh
+WS_TICKET_TTL=30
+ALLOWED_ORIGINS=http://localhost:3000
+
+# Armazenamento de Mídia S3 / MinIO
+S3_ENDPOINT=http://minio:9000
+S3_BUCKET=whiteboard-assets
+S3_ACCESS_KEY=minio
+S3_SECRET_KEY=minio12345
+S3_REGION=us-east-1
+```
+
+| Variável | Descrição |
+| :--- | :--- |
+| `DATABASE_URL` | String de conexão com o PostgreSQL utilizada pelo Prisma. |
+| `REDIS_URL` | URL de conexão do Redis para armazenamento de sessões e filas. |
+| `JWT_ACCESS_SECRET` | Chave secreta de alta entropia para assinatura dos JWTs. |
+| `JWT_ACCESS_TTL` | Tempo de expiração do Access Token em segundos (padrão: 15 min). |
+| `REFRESH_COOKIE_NAME` | Nome do cookie `HttpOnly` com o token de atualização. |
+| `WS_TICKET_TTL` | Tempo de vida em segundos do ticket de handshake do WebSocket. |
+| `ALLOWED_ORIGINS` | Origens autorizadas na política de CORS da API. |
+| `S3_ENDPOINT` / `S3_BUCKET` | Configurações do serviço de armazenamento compatível com S3. |
+
+---
+
+## 📝 Comandos do Makefile
+
+Para facilitar o dia a dia, um `Makefile` completo está disponível na raiz:
 
 ```bash
-# Verification & Quality
-make check         # Full validation: contract check, typecheck, lint, and all 189+ tests
-make check-quick   # Fast validation: contract check, typecheck, tests (skips linter)
-make test          # Run all Vitest unit and contract tests across both submodules
-make typecheck     # Run TypeScript type checking across both projects
-make lint          # Run ESLint across both projects
-make sync-shared   # Copy shared contracts from backend to frontend
-make sync-shared-check # Verify contract parity
-
-# Infrastructure & Containers
-make deps          # Start infrastructure services (Postgres, Redis, MinIO)
-make up            # Build and start all services via Docker Compose
-make down          # Stop all Docker containers
-make logs          # Tail container logs
-make ps            # List running container status and ports
-make reset         # Stop containers and remove persisted volumes
+# Ambiente e ciclo de vida Docker
+make env       # Cria o .env local a partir de .env.example
+make up        # Constrói e inicializa todos os containers em segundo plano
+make down      # Encerra todos os containers em execução
+make deps      # Inicializa somente a infraestrutura (Postgres, Redis, MinIO)
+make logs      # Acompanha logs dos containers em tempo real (tail=100)
+make ps        # Exibe o status atual e portas de todos os containers
+make reset     # Encerra os containers e remove todos os volumes persistidos
+make config    # Valida o arquivo docker-compose gerado
 ```
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## 🧪 Testes e Qualidade
 
-Both submodules feature rigorous, sub-second test suites:
+O projeto possui um pipeline rigoroso de qualidade em ambas as frentes:
 
 ```bash
-# Backend test suite (15 suites, 71 tests)
-npm --prefix backend run test
+# Executar suíte de testes no Backend
+cd backend
+npm run test          # Testes unitários rápidos e testes de contrato
+npm run test:int      # Testes de integração com banco real via Testcontainers
+npm run lint          # Análise estática com ESLint
+npm run format        # Formatação de arquivos com Prettier
+npm run typecheck     # Verificação rigorosa do TypeScript sem emissão de código
 
-# Frontend test suite (21 suites, 118 tests)
-npm --prefix frontend run test
-
-# Full verification harness across the entire workspace
-make check
+# Executar suíte de testes no Frontend
+cd frontend
+npm run test          # Testes unitários de renderers, math e tools (Vitest)
+npm run test:e2e      # Testes ponta a ponta de navegação e colaboração (Playwright)
+npm run lint          # Lint de padrões Next.js e React
+npm run format        # Formatação de arquivos com Prettier
+npm run typecheck     # Verificação estática de tipos
 ```
 
 ---
 
-## 📚 Technical Documentation & Guides
+## 📚 Documentação Técnica & Guias
 
-- **AI Agent Guidelines**: [`AGENTS.md`](./AGENTS.md) · [`CLAUDE.md`](./CLAUDE.md) · [`.cursorrules`](./.cursorrules)
-- **Local Development Guide**: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md)
-- **Testing Handbook**: [`docs/TESTING.md`](./docs/TESTING.md)
-- **CRDT & Collab Protocol**: [`docs/PROTOCOL.md`](./docs/PROTOCOL.md)
-- **Contributing & Submodules Protocol**: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
-- **System Architecture**: [`docs/architecture.md`](./docs/architecture.md)
-- **Architecture Decision Records (ADRs)**: [`docs/adr/`](./docs/adr/)
-- **Task Backlog**: [`docs/tasks/00-index.md`](./docs/tasks/00-index.md)
+- **Diretrizes para Agentes de IA**: [`AGENTS.md`](./AGENTS.md) · [`CLAUDE.md`](./CLAUDE.md) · [`.cursorrules`](./.cursorrules)
+- **Guia de Desenvolvimento Local**: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md)
+- **Manual de Testes & Qualidade**: [`docs/TESTING.md`](./docs/TESTING.md)
+- **Especificação do Protocolo CRDT & Collab**: [`docs/PROTOCOL.md`](./docs/PROTOCOL.md)
+- **Diretrizes de Contribuição & Submódulos**: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
+- **Arquitetura do Sistema**: [`docs/architecture.md`](./docs/architecture.md)
+- **Registros de Decisões de Arquitetura (ADRs)**: [`docs/adr/`](./docs/adr/)
+- **Backlog de Tarefas**: [`docs/tasks/00-index.md`](./docs/tasks/00-index.md)
+

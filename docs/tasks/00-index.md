@@ -4,18 +4,18 @@ Conventions: `[R]` = Repository (**BE** Backend, **FE** Frontend, **INF** Root /
 
 | Epic | File | Tasks |
 | :--- | :--- | :--- |
-| Epic 0 — Foundation | [00-fundacao.md](./00-fundacao.md) | 12 |
-| Epic 1 — Authentication and Users | [01-autenticacao-e-usuarios.md](./01-autenticacao-e-usuarios.md) | 7 |
-| Epic 2 — Boards, Members and Links | [02-quadros-membros-e-links.md](./02-quadros-membros-e-links.md) | 8 |
-| Epic 3 — Collab Server and Synchronization | [03-collab-server-e-sincronizacao.md](./03-collab-server-e-sincronizacao.md) | 9 |
+| Epic 0 — Foundation | [00-foundation.md](./00-foundation.md) | 12 |
+| Epic 1 — Authentication and Users | [01-authentication-and-users.md](./01-authentication-and-users.md) | 7 |
+| Epic 2 — Boards, Members and Links | [02-boards-members-and-links.md](./02-boards-members-and-links.md) | 8 |
+| Epic 3 — Collab Server and Synchronization | [03-collab-server-and-sync.md](./03-collab-server-and-sync.md) | 9 |
 | Epic 4 — Canvas Engine | [04-canvas-engine.md](./04-canvas-engine.md) | 10 |
-| Epic 5 — Presence | [05-presenca.md](./05-presenca.md) | 4 |
-| Epic 6 — Undo/Redo and Offline | [06-undo-redo-e-offline.md](./06-undo-redo-e-offline.md) | 2 |
-| Epic 7 — History, Assets and Export | [07-historico-assets-e-exportacao.md](./07-historico-assets-e-exportacao.md) | 7 |
-| Epic 8 — Security and Validation | [08-seguranca-e-validacao.md](./08-seguranca-e-validacao.md) | 8 |
-| Epic 9 — Scale, Observability and Infrastructure | [09-escala-observabilidade-e-k8s.md](./09-escala-observabilidade-e-k8s.md) | 11 |
-| Epic 10 — Quality and Verification | [10-qualidade.md](./10-qualidade.md) | 5 |
-| Epic 11 — v2 and Experimental | [11-v2-e-experimental.md](./11-v2-e-experimental.md) | 4 |
+| Epic 5 — Presence | [05-presence.md](./05-presence.md) | 4 |
+| Epic 6 — Undo/Redo and Offline | [06-undo-redo-and-offline.md](./06-undo-redo-and-offline.md) | 2 |
+| Epic 7 — History, Assets and Export | [07-history-assets-and-export.md](./07-history-assets-and-export.md) | 7 |
+| Epic 8 — Security and Validation | [08-security-and-validation.md](./08-security-and-validation.md) | 8 |
+| Epic 9 — Scale, Observability and Infrastructure | [09-scale-observability-and-k8s.md](./09-scale-observability-and-k8s.md) | 11 |
+| Epic 10 — Quality and Verification | [10-quality-and-verification.md](./10-quality-and-verification.md) | 5 |
+| Epic 11 — v2 and Experimental | [11-v2-and-experimental.md](./11-v2-and-experimental.md) | 4 |
 
 **Total: 87 tasks.**
 
