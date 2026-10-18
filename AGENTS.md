@@ -79,7 +79,8 @@ The following code smells are strictly prohibited across both submodules:
 - **Binary Assets over WebSockets**: Never transmit raw file bytes (images, PDFs) over the real-time WebSocket channel. Binary assets MUST be uploaded directly to S3/MinIO via Presigned PUT URLs.
 - **Bypassing Zod Validation**: Never apply external deltas directly to canonical documents without validating through the authoritative server Shadow Document (`ElementDataSchema`).
 - **Stateless/Stateful Boundary Pollution**: Never store in-memory room docs in `main.api.ts`, and never expose HTTP endpoints on `main.collab.ts`.
-- **N+1 Database Queries**: Ensure Prisma queries fetch relational data using proper `include` or explicit batching, and maintain indexes on foreign keys (`boardId`, `userId`, `token`).
+- **N+1 Database Queries**: Ensure Prisma queries fetch relational data using proper `include` or explicit batching, and maintain indexes on foreign keys (`board_id`, `user_id`, `token_hash`).
+- **Non-Standard Database Schema Identifiers**: Never define PostgreSQL tables or columns in PascalCase or camelCase. All relational tables and columns must use `snake_case` (`table_name`, `column_name`) mapped via Prisma `@@map("table_name")` and `@map("column_name")`.
 
 ---
 
@@ -126,6 +127,7 @@ All commits across the root repository and both submodules must strictly adhere 
 | **Spatial Index** | Any addition, deletion, or geometry modification of an element MUST update `SpatialIndex` (RBush) | Culling and hit-testing rely on the R-Tree index staying synchronized with `repository.getAllElements()`. |
 | **File Storage** | Assets (images/files) MUST be uploaded directly via S3 Presigned PUT URLs | Binary asset payloads must never be transferred across the real-time WebSocket collab channel. |
 | **Contracts** | `backend/src/shared/` is the single source of truth; never edit `frontend/src/shared/` directly | Avoids contract divergence between server and client. |
+| **Database Schema** | All PostgreSQL tables and columns MUST use `snake_case` (`table_name`, `column_name`) | Keeps database conventions standard and portable across SQL engines while allowing idiomatic TypeScript in Prisma models via `@@map` and `@map`. |
 
 ---
 

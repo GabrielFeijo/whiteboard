@@ -50,6 +50,11 @@ flowchart LR
    - `backend/src/shared/` is the single source of truth for protocol constants, element schemas, Zod validators, and error codes.
    - `make sync-shared` synchronizes types to `frontend/src/shared/`, verified via `make sync-shared-check` in CI.
 
+4. **PostgreSQL Database Schema Conventions (`snake_case`)**
+   - All relational database tables and columns strictly adhere to `snake_case` naming (`table_name`, `column_name`).
+   - In Prisma schema, models use PascalCase and fields use camelCase for TypeScript idiomatic consistency, explicitly mapped to PostgreSQL identifiers via `@@map("table_name")` and `@map("column_name")`.
+   - Core relational tables: `user`, `refresh_token`, `board`, `board_member`, `share_link`, `snapshot`, `doc_update`.
+
 ## Networking & Dual-Endpoint Topology
 
 ### Container Networking (`INTERNAL_API_URL`)
@@ -65,7 +70,7 @@ flowchart LR
 
 ## Security & Concurrency Boundaries
 
-- **Atomic Refresh Token Rotation**: Implemented via atomic SQL update conditions (`WHERE id = :id AND usedAt IS NULL AND revokedAt IS NULL`), eliminating race-condition false-positive family revocations.
+- **Atomic Refresh Token Rotation**: Implemented via atomic SQL update conditions (`WHERE id = :id AND used_at IS NULL AND revoked_at IS NULL`), eliminating race-condition false-positive family revocations.
 - **Network-Scoped Brute-Force Lockout**: Failed authentication tracking is composite-keyed by `(email, ip)`, mitigating distributed denial-of-service against legitimate user accounts.
 - **WebSocket Connection Lifecycle Safety**: Guarded gateway connection handlers clean up pending socket contexts and connection counters on unexpected connection termination.
 - **SVG XML Sanitization**: All exported attributes and styles undergo XML character escaping to prevent stored XSS attacks.

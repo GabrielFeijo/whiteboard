@@ -40,7 +40,7 @@ We needed to decide where to store incremental updates and snapshots:
 
 ## Decision
 
-Store incremental updates (`BoardUpdate`) and consolidated snapshots (`BoardSnapshot`) directly in **PostgreSQL as binary `bytea` columns**.
+Store incremental updates (`doc_update` table) and consolidated snapshots (`snapshot` table) directly in **PostgreSQL as binary `bytea` columns**.
 
 S3/MinIO object storage is reserved exclusively for heavy binary user media assets (images and file attachments).
 

@@ -174,6 +174,7 @@ NEXT_PUBLIC_S3_ENDPOINT=http://localhost:9000
 
 ### 2. Modifying Database Models
 1. Edit `backend/prisma/schema.prisma`.
+   - **Database Naming Convention**: Always map models to `snake_case` table names using `@@map("table_name")` and fields to `snake_case` column names using `@map("column_name")`. Never expose PascalCase or camelCase directly to PostgreSQL.
 2. Generate client: `npm --prefix backend run prisma:generate`.
 3. Create migration: `npm --prefix backend run prisma:migrate`.
 4. Update services and DTOs in `backend/src/modules/`.
