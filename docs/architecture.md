@@ -30,6 +30,10 @@ flowchart LR
   UI -->|Presigned PUT (S3_PUBLIC_ENDPOINT)| S3
 ```
 
+<div align="center">
+  <img src="images/architecture-board-preview.png" alt="Whiteboard Interactive Studio & Real-Time Architecture Preview" width="100%" />
+</div>
+
 ## Core Design Principles
 
 1. **Stateless API & Stateful Collab Isolation**

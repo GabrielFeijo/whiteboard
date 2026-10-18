@@ -10,6 +10,12 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+---
+
+<div align="center">
+  <img src="docs/images/architecture-board-preview.png" alt="Whiteboard Interactive Studio & Real-Time Architecture Preview" width="100%" />
+  <p><em>Quadro de arquitetura do sistema e preview interativo renderizado diretamente na engine 2D do Whiteboard</em></p>
+</div>
 
 ---
 
