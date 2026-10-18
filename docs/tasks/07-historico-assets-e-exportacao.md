@@ -1,13 +1,13 @@
-# Épico 7 — Histórico, assets e exportação (RF14, RF15, RF18)
+# Epic 7 — History, Assets and Export (RF14, RF15, RF18)
 
-Convenção: `[R]` = repositório (**BE** backend, **FE** frontend, **INF** raiz/infra, **X** ambos). Estimativa: **S** ≤ ½ dia · **M** 1–2 dias · **L** 3–5 dias. Status: ⬜ pendente · ✅ concluída.
+Conventions: `[R]` = Repository (**BE** Backend, **FE** Frontend, **INF** Root / Infrastructure, **X** Both). Estimate: **S** ≤ ½ day · **M** 1–2 days · **L** 3–5 days. Status: ⬜ Pending · ✅ Completed.
 
-| ID | R | Task | Est. | Deps | Status |
-| --- | --- | --- | --- | --- | --- |
-| T7.1 | BE | Endpoints de snapshots (listar, manual, restore com `PRE_RESTORE`) | M | T3.4 | ✅ |
-| T7.2 | FE | Painel de versões + preview com `Y.Doc` isolado read-only | L | T7.1 | ✅ |
-| T7.3 | BE | Presign de upload (Content-Type/Length), allowlist PNG/JPEG/WebP | M | T0.4 | ✅ |
-| T7.4 | BE | Pós-processamento: magic bytes, strip EXIF (sharp), URLs de leitura assinadas | M | T7.3 | ✅ |
-| T7.5 | FE | Upload e renderização de imagens no canvas (`assetId`) | L | T7.3, T4.4 | ✅ |
-| T7.6 | FE | Exportação PNG/SVG (sanitização DOMPurify) | M | T4.4 | ✅ |
-| T7.7 | BE | `POST /boards/:id/export` (server-side, quando necessário) | M | T7.6 | ✅ |
+| ID | R | Task | Est. | Deps | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| T7.1 | BE | Snapshot endpoints (list, manual trigger, restore with `PRE_RESTORE`) | M | T3.4 | ✅ | Fully implemented in SnapshotController / PersistenceService |
+| T7.2 | FE | Version history drawer + preview with isolated read-only `Y.Doc` | L | T7.1 | ✅ | Implemented in VersionHistoryDrawer with diffing |
+| T7.3 | BE | Presigned upload URL endpoint with Content-Type and size validation (allowlist PNG/JPEG/WebP) | M | T0.4 | ✅ | Implemented in AssetsController & S3StorageService with dual endpoint support |
+| T7.4 | BE | Asset post-processing pipeline (magic bytes validation, EXIF stripping via Sharp, signed CDN distribution) | M | T7.3 | ⬜ | Planned for asynchronous worker media pipeline |
+| T7.5 | FE | Direct S3 asset upload and canvas rendering (`assetId` + `src`) | L | T7.3, T4.4 | ✅ | Implemented via S3 presigned PUT, LRU image cache and error boundaries |
+| T7.6 | FE | PNG and SVG export with XML escaping and element rendering | M | T4.4 | ✅ | Fully verified with sanitization against XSS injection |
+| T7.7 | BE | Server-side board export endpoint (`POST /boards/:id/export`) | M | T7.6 | ✅ | Handled server-side when requested |
