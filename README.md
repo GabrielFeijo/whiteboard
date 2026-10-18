@@ -274,3 +274,17 @@ npm run lint          # Lint de padrões Next.js e React
 npm run format        # Formatação de arquivos com Prettier
 npm run typecheck     # Verificação estática de tipos
 ```
+
+---
+
+## 📚 Documentação Técnica & Guias
+
+- **Diretrizes para Agentes de IA**: [`AGENTS.md`](./AGENTS.md) · [`CLAUDE.md`](./CLAUDE.md) · [`.cursorrules`](./.cursorrules)
+- **Guia de Desenvolvimento Local**: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md)
+- **Manual de Testes & Qualidade**: [`docs/TESTING.md`](./docs/TESTING.md)
+- **Especificação do Protocolo CRDT & Collab**: [`docs/PROTOCOL.md`](./docs/PROTOCOL.md)
+- **Diretrizes de Contribuição & Submódulos**: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
+- **Arquitetura do Sistema**: [`docs/architecture.md`](./docs/architecture.md)
+- **Registros de Decisões de Arquitetura (ADRs)**: [`docs/adr/`](./docs/adr/)
+- **Backlog de Tarefas**: [`docs/tasks/00-index.md`](./docs/tasks/00-index.md)
+

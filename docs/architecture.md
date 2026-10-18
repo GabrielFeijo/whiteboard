@@ -81,3 +81,21 @@ flowchart LR
 | Redis | `localhost:6379` | Sessions, cache, pub/sub channels |
 | MinIO Console | `http://localhost:9001` | S3 dashboard (`minio` / `minio12345`) |
 | MinIO API | `http://localhost:9000` | S3 object storage endpoint |
+
+---
+
+## Detailed Technical Guides & Architecture Decisions
+
+- **Protocol & CRDT Specification**: [`docs/PROTOCOL.md`](./PROTOCOL.md)
+- **Local Development Guide**: [`docs/DEVELOPMENT.md`](./DEVELOPMENT.md)
+- **Testing Handbook**: [`docs/TESTING.md`](./TESTING.md)
+- **Contributing & Submodules Protocol**: [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md)
+- **Architecture Decisions (ADRs)**:
+  - [ADR-000: Dois Repositórios Independentes com Shared Sincronizado](./adr/ADR-000-dois-repos-e-shared-duplicado.md)
+  - [ADR-001: Servidor WebSocket Próprio vs Hocuspocus](./adr/ADR-001-servidor-proprio-vs-hocuspocus.md)
+  - [ADR-002: Canvas 2D Proprietária vs WebGL / Konva.js](./adr/ADR-002-canvas2d-vs-webgl.md)
+  - [ADR-003: Snapshots CRDT em PostgreSQL vs S3](./adr/ADR-003-snapshots-postgres-vs-s3.md)
+  - [ADR-004: Mensageria em Cluster: Redis Pub/Sub vs Streams](./adr/ADR-004-redis-pubsub-vs-streams.md)
+  - [ADR-005: Criptografia de Ponta a Ponta (E2EE) Opcional](./adr/ADR-005-e2ee-opcional.md)
+  - [ADR-006: Arquitetura Dual-Entrypoint no Backend](./adr/ADR-006-dual-entrypoint-nestjs.md)
+

@@ -1,0 +1,19 @@
+# Cursor Rules — Whiteboard
+
+You are an expert full-stack engineer and autonomous agent working on Whiteboard, a real-time collaborative infinite canvas platform.
+
+## Architecture Context
+- `backend/`: NestJS 11 dual-entrypoint service (REST API on :3001, Collab WebSocket on :3002).
+- `frontend/`: Next.js 16 (App Router) + React 19 + custom 2D Canvas Engine on :3000.
+- `docs/`: Architecture specifications, ADRs, protocol docs, and task backlog.
+- Submodules: `backend` and `frontend` are independent git repositories.
+
+## Invariant Rules
+1. Never edit `frontend/src/shared/` directly. Always edit `backend/src/shared/` and run `make sync-shared`.
+2. Commit in submodule repos first before updating root pointers.
+3. Follow Conventional Commits (`feat(...)`, `fix(...)`, etc.).
+4. Never put board state in `main.api.ts` and never add HTTP routes in `main.collab.ts`.
+5. Maintain strict screen vs world coordinate separation in frontend canvas engine.
+6. Always run `make check` before concluding any task.
+
+See `AGENTS.md` and `docs/` for complete details.
