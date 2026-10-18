@@ -14,3 +14,4 @@ Convenção: `[R]` = repositório (**BE** backend, **FE** frontend, **INF** raiz
 | T4.8 | FE | Z-order com fractional indexing, agrupar/desagrupar | M | T4.7 | ✅ |
 | T4.9 | FE | Toolbar, atalhos de teclado, a11y (WCAG AA) | M | T4.4 | ✅ |
 | T4.10 | FE | Cache `OffscreenCanvas` e LOD | M | T4.4 | ✅ |
+| T4.11 | FE | Padronização de espaçamento customizável entre elementos e guias magnéticas de gap | M | T4.7 | ✅ |
