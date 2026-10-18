@@ -1,55 +1,55 @@
-# ADR-004 — Mensageria em Cluster: Redis Pub/Sub vs Redis Streams
+# ADR-004 — Inter-Pod Cluster Replication: Redis Pub/Sub vs Redis Streams
 
-- **Status:** Aceita
-- **Data:** 2026-10-12
-- **Decisores:** Time de Arquitetura Whiteboard
-
----
-
-## Contexto & Problema
-
-Para escalar o servidor de colaboração (`main.collab.ts`) horizontalmente em múltiplos pods ou réplicas, os usuários conectados ao pod A que alteram um quadro precisam que suas alterações sejam propagadas instantaneamente para os usuários conectados ao pod B no mesmo quadro.
-
-Além disso, é necessário um mecanismo para desautenticar ou desconectar imediatamente usuários cujas permissões tenham sido revogadas no banco de dados.
-
-Precisávamos decidir o mecanismo de replicação inter-pod no Redis:
-1. Redis Pub/Sub tradicional por sala.
-2. Redis Streams com grupos de consumidores e retenção de log.
+- **Status:** Accepted
+- **Date:** 2026-10-12
+- **Decision Makers:** Whiteboard Architecture Team
 
 ---
 
-## Alternativas Analisadas
+## Context & Problem
 
-### Alternativa A: Redis Streams
-- **Vantagens**: Persistência no Redis, confirmação de entrega (ACK) e capacidade de replay de mensagens após desconexões breves.
-- **Desvantagens**:
-  - Complexidade acrescida de gerenciamento de offsets, dead-letter queues e expiração/trim de streams para milhares de salas ativas.
-  - Sobrecarga de memória desnecessária no Redis, uma vez que o histórico canônico e durável já é mantido no PostgreSQL.
+To scale the collaboration server (`main.collab.ts`) horizontally across multiple pods, changes made by users connected to Pod A must be broadcast instantaneously to users connected to Pod B on the same board.
 
-### Alternativa B: Redis Pub/Sub Efêmero por Sala (Escolhida)
-- **Vantagens**:
-  - **Latência ultrabaixa** (< 1ms): Distribuição broadcast instantânea na memória do Redis sem escrita em disco.
-  - **Zero retenção de memória**: Mensagens são consumidas instantaneamente pelos pods inscritos e não acumulam volume no Redis.
-  - **Simplicidade**: Topologia de canal direto:
-    - `board:{boardId}:updates`: Propaga deltas binários para todos os pods com sessões ativas do quadro.
-    - `board:{boardId}:acl`: Propaga eventos de revogação de acesso e expulsão imediata de sockets.
-  - O protocolo CRDT (Yjs) já é resiliente a perdas de pacotes durante reconexões através do handshake `SyncStep1`/`SyncStep2` contra o servidor canônico.
-- **Desvantagens**:
-  - Mensagens são perdidas se um pod estiver temporariamente sem conexão com o Redis. Mitigado pela reconciliação de estado nativa do Yjs no handshake do cliente.
+Additionally, an immediate mechanism is required to disconnect or revoke access for users whose permissions are revoked in the database.
+
+We needed to decide on the inter-pod message broker mechanism in Redis:
+1. Standard Redis Pub/Sub channels per room.
+2. Redis Streams with consumer groups and persistent log offsets.
 
 ---
 
-## Decisão
+## Considered Alternatives
 
-Adotar **Redis Pub/Sub** com canais dedicados por quadro (`board:{id}:updates` e `board:{id}:acl`) para comunicação em tempo real entre pods do Collab Server.
+### Alternative A: Redis Streams
+- **Pros**: Persistent logs within Redis, consumer acknowledgment (ACK), and message replay capabilities for transient network drops.
+- **Cons**:
+  - Operational overhead managing stream trimming, consumer offsets, and dead-letter queues across thousands of active rooms.
+  - Unnecessary Redis memory consumption, as durable long-term storage is already guaranteed by PostgreSQL.
+
+### Alternative B: Ephemeral Redis Pub/Sub per Room (Chosen)
+- **Pros**:
+  - **Sub-millisecond Latency**: Pure in-memory distribution without disk write overhead.
+  - **Zero Memory Accumulation**: Messages are consumed instantaneously by subscribed pods and automatically evicted.
+  - **Clean Topology**:
+    - `board:{boardId}:updates`: Broadcasts binary Yjs deltas across pods hosting active sessions of the board.
+    - `board:{boardId}:acl`: Propagates immediate member revocation events and kicks sockets across all pods.
+  - The CRDT protocol naturally handles packet loss or reconnections through its native `SyncStep1` / `SyncStep2` state vector exchange against the server canonical doc.
+- **Cons**:
+  - Messages are lost if a pod is temporarily disconnected from Redis during a broadcast. Mitigated by client-side CRDT state reconciliation upon reconnection.
 
 ---
 
-## Consequências
+## Decision
 
-- **Positivas**:
-  - Escalabilidade horizontal linear do Collab Server.
-  - Consumo mínimo de memória e CPU no Redis.
-  - Resposta instantânea de segurança para alterações de permissão e exclusão de membros.
-- **Negativas / Mitigações**:
-  - O Redis Pub/Sub não garante durabilidade caso todos os pods caiam; a persistência no PostgreSQL garante a recuperação completa do estado canônico.
+Adopt **Redis Pub/Sub** with dedicated per-board channels (`board:{id}:updates` and `board:{id}:acl`) for real-time inter-pod collaboration server communication.
+
+---
+
+## Consequences
+
+- **Positive**:
+  - Linear horizontal scalability for the Collab Server.
+  - Minimal CPU and memory overhead on Redis.
+  - Immediate security response for access revocation and member removals.
+- **Negative / Mitigations**:
+  - Pub/Sub does not guarantee durable delivery; full state recovery is provided by PostgreSQL snapshots.

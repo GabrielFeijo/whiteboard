@@ -1,55 +1,55 @@
-# ADR-003 — Armazenamento de Snapshots CRDT: PostgreSQL vs S3
+# ADR-003 — CRDT Storage: PostgreSQL Bytea vs S3 Object Storage
 
-- **Status:** Aceita
-- **Data:** 2026-10-12
-- **Decisores:** Time de Arquitetura Whiteboard
-
----
-
-## Contexto & Problema
-
-O Whiteboard precisa armazenar o histórico e o estado consolidado dos quadros colaborativos. O Yjs produz deltas binários (`Uint8Array`) incrementais que, com o tempo, acumulam dezenas de milhares de operações.
-
-Para garantir tempos de inicialização de sala rápidos (< 200ms), é necessário consolidar periodicamente esses deltas em **snapshots binários compactados**.
-
-Precisávamos decidir onde armazenar os snapshots binários e as atualizações incrementais:
-1. No banco relacional PostgreSQL (`bytea`).
-2. Em armazenamento de objetos (MinIO / S3).
+- **Status:** Accepted
+- **Date:** 2026-10-12
+- **Decision Makers:** Whiteboard Architecture Team
 
 ---
 
-## Alternativas Analisadas
+## Context & Problem
 
-### Alternativa A: Snapshots Direto no S3
-- **Vantagens**: Custo de armazenamento menor por gigabyte para arquivos gigantes; desacoplamento total do banco de dados.
-- **Desvantagens**:
-  - Latência de leitura no handshake inicial da sala (latência de rede HTTP para o S3 adicional antes de responder ao WebSocket).
-  - Impossibilidade de realizar transações atômicas ACID vinculando a criação de snapshots com a deleção/consolidação de linhas na tabela de deltas.
-  - Complexidade de consistência eventual em operações concorrentes.
+The Whiteboard system must store both incremental updates and consolidated snapshots for collaborative rooms. Yjs generates compact binary deltas (`Uint8Array`) that accumulate over prolonged sessions.
 
-### Alternativa B: Snapshots em PostgreSQL (`bytea`) com Snapshots Compactados (Escolhida)
-- **Vantagens**:
-  - **Latência ultrabaixa**: O snapshot compactado é recuperado em uma única query SQL com índice por `boardId`, em menos de 5ms.
-  - **Atomicidade e Integridade Transacional**: A gravação do novo snapshot e o truncate de deltas consolidados são realizados em uma transação ACID com Prisma.
-  - **Simplicidade operacional**: O PostgreSQL já armazena usuários, membros e metadados de quadros.
-  - O volume de um snapshot Yjs de 5.000 nós compactado fica em torno de 50KB a 200KB, perfeitamente comportado em colunas `bytea`.
-- **Desvantagens**:
-  - Crescimento do banco de dados em longo prazo; mitigado por compaction periódica.
+To ensure fast room initialization times (< 200ms), these deltas must periodically be consolidated into **compacted binary snapshots**.
+
+We needed to decide where to store incremental updates and snapshots:
+1. In the PostgreSQL relational database (`bytea` columns).
+2. In object storage (MinIO / S3).
 
 ---
 
-## Decisão
+## Considered Alternatives
 
-Armazenar as atualizações incrementais (`BoardUpdate`) e os snapshots consolidados (`BoardSnapshot`) diretamente no **PostgreSQL em colunas binárias `bytea`**.
+### Alternative A: Snapshots Stored Directly in S3
+- **Pros**: Lower storage cost per gigabyte for massive files; fully offloads database storage.
+- **Cons**:
+  - High latency during room initialization (additional HTTP roundtrips to S3 before acknowledging WebSocket connections).
+  - Lack of ACID transactional integrity when creating snapshots and truncating consolidated update records.
+  - Eventual consistency issues during concurrent compaction passes.
 
-O armazenamento S3 (MinIO) é reservado exclusivamente para arquivos binários pesados de mídia (imagens e assets anexados aos quadros).
+### Alternative B: Snapshots and Deltas in PostgreSQL (`bytea`) (Chosen)
+- **Pros**:
+  - **Ultra-low latency**: Compacted binary snapshots are retrieved in a single indexed SQL query in < 5ms.
+  - **ACID Transactional Safety**: Updating snapshots and clearing compacted delta logs occurs within a single atomic Prisma transaction.
+  - **Operational Simplicity**: PostgreSQL already manages user accounts, memberships, and board metadata.
+  - A compacted Yjs snapshot for 5,000 nodes typically ranges from 50KB to 200KB, perfectly suited for `bytea` columns.
+- **Cons**:
+  - Long-term database storage growth; mitigated by automated periodic compaction.
 
 ---
 
-## Consequências
+## Decision
 
-- **Positivas**:
-  - Abertura de salas extremamente rápida (< 50ms de overhead de banco de dados).
-  - Transações atômicas garantem que nunca haja estado corrompido ou perda de deltas.
-- **Negativas / Mitigações**:
-  - Monitorar o tamanho da tabela `BoardSnapshot` via métricas Prometheus; implementar arquivamento frio se o volume ultrapassar centenas de gigabytes.
+Store incremental updates (`BoardUpdate`) and consolidated snapshots (`BoardSnapshot`) directly in **PostgreSQL as binary `bytea` columns**.
+
+S3/MinIO object storage is reserved exclusively for heavy binary user media assets (images and file attachments).
+
+---
+
+## Consequences
+
+- **Positive**:
+  - Extremely fast room startup latency (< 50ms database overhead).
+  - Strong transactional guarantees ensure zero state corruption or lost deltas.
+- **Negative / Mitigations**:
+  - Table growth is monitored via Prometheus metrics; cold archiving can be introduced if storage exceeds hundreds of gigabytes.

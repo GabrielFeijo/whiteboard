@@ -1,60 +1,60 @@
-# ADR-006 — Arquitetura de Inicialização Dupla (Dual-Entrypoint) no Backend
+# ADR-006 — Dual-Entrypoint Architecture in Backend
 
-- **Status:** Aceita
-- **Data:** 2026-10-18
-- **Decisores:** Time de Arquitetura Whiteboard
-
----
-
-## Contexto & Problema
-
-O backend do Whiteboard lida com duas cargas de trabalho com características de execução e escalabilidade fundamentalmente divergentes:
-
-1. **API REST (`main.api.ts` na porta 3001)**:
-   - Requisições HTTP curtas e sem estado (Stateless): registro, login, CRUD de quadros, controle de permissões RBAC, geração de URLs pré-assinadas S3 e health checks.
-   - Ideal para escalonamento horizontal automático (HPA) baseado em requisições/segundo ou CPU, sem necessidade de afinidade de sessão.
-2. **Servidor Collab (`main.collab.ts` na porta 3002)**:
-   - Conexões WebSocket de longa duração e com estado (Stateful): mantém instâncias `Y.Doc` ativas na memória de cada sala, gerencia subscrições Redis Pub/Sub e valida deltas binários contínuos.
-   - Ideal para dimensionamento baseado em contagem de conexões ativas e memória alocada por sala, operando de forma independente do tráfego HTTP.
-
-Precisávamos decidir se manteríamos ambos os serviços no mesmo processo Node.js ou se os separaríamos em microsserviços distintos com codebases separados ou dual-entrypoint.
+- **Status:** Accepted
+- **Date:** 2026-10-18
+- **Decision Makers:** Whiteboard Architecture Team
 
 ---
 
-## Alternativas Analisadas
+## Context & Problem
 
-### Alternativa A: Monólito em Processo Único (REST e WebSocket juntos)
-- **Desvantagens**:
-  - Picos de tráfego HTTP degradam o event-loop compartilhado, introduzindo jitter e latência na sincronização em tempo real de desenho e cursores.
-  - Impossibilidade de escalar as réplicas do WebSocket de forma independente do tráfego de API.
-  - Reinicializações de deploy de rotas REST derrubam todas as conexões WebSocket ativas de usuários desenhando.
+The backend of the Whiteboard platform manages two operational workloads with fundamentally diverging execution characteristics and scaling requirements:
 
-### Alternativa B: Repositórios Separados para API REST e Collab Server
-- **Desvantagens**:
-  - Duplicação de código de banco de dados (Prisma), entidades, autenticação e contratos.
-  - Overhead de manter dois repositórios, dois `package.json` e dois pipelines para o mesmo domínio backend.
+1. **REST API (`main.api.ts` on port 3001)**:
+   - Short-lived, stateless HTTP request/response cycles: registration, authentication, board CRUD, RBAC permission checks, S3 presigned URL generation, and health checks.
+   - Best suited for Horizontal Pod Autoscaling (HPA) driven by request volume or CPU utilization, with zero session stickiness.
+2. **Collab Server (`main.collab.ts` on port 3002)**:
+   - Long-lived, stateful WebSocket connections: maintains in-memory active `Y.Doc` instances per room, coordinates Redis Pub/Sub cluster channels, and validates continuous binary deltas.
+   - Best scaled based on connection count and active room memory consumption, independently of HTTP web traffic.
 
-### Alternativa C: Repositório Único com Dual-Entrypoint NestJS (Escolhida)
-- **Vantagens**:
-  - **Codebase único**: Compartilha modelos Prisma, serviços de infraestrutura (Redis, S3, Config), schemas Zod e módulos utilitários sem duplicação.
-  - **Binários e containers independentes**:
-    - `npm run start:api`: Inicializa apenas os módulos REST (`src/main.api.ts`).
-    - `npm run start:collab`: Inicializa apenas o gateway e os serviços de tempo real (`src/main.collab.ts`).
-  - **Escala e deploy desacoplados**: No Docker Compose e Kubernetes, são gerados containers distintos com alocações de recursos e health checks próprios.
-  - **Isolamento de falhas**: Uma falha ou pico de tráfego na API REST não afeta a estabilidade dos usuários ativos desenhando no Collab Server.
+We needed to decide whether to host both workloads in a single Node.js process, separate them into entirely separate repositories, or use a dual-entrypoint design within a single repository.
 
 ---
 
-## Decisão
+## Considered Alternatives
 
-Adotar a **Arquitetura Dual-Entrypoint** dentro do repositório `backend/`, com pontos de entrada estritamente separados:
-- `src/main.api.ts` para a API REST na porta 3001.
-- `src/main.collab.ts` para o servidor WebSocket na porta 3002.
+### Alternative A: Single Monolithic Process (REST and WebSocket together)
+- **Cons**:
+  - High HTTP traffic spikes saturate the shared event loop, causing jitter and latency spikes in real-time drawing and cursor synchronization.
+  - Inability to scale WebSocket replicas independently of REST API instances.
+  - Deployments or restarts for API route fixes drop all active collaborative drawing sessions.
+
+### Alternative B: Separate Repositories for REST API and Collab Server
+- **Cons**:
+  - Duplication of Prisma database models, entities, authentication logic, and shared schemas.
+  - Unnecessary overhead maintaining two repositories, two `package.json` files, and duplicate CI pipelines for a cohesive backend domain.
+
+### Alternative C: Single Repository with Dual NestJS Entrypoints (Chosen)
+- **Pros**:
+  - **Single Codebase**: Reuses Prisma schemas, infrastructure clients (Redis, S3, Config), Zod schemas, and utility modules without duplication.
+  - **Independent Binaries & Containers**:
+    - `npm run start:api`: Boots only the REST API modules (`src/main.api.ts`).
+    - `npm run start:collab`: Boots only the collaboration gateway and real-time synchronization services (`src/main.collab.ts`).
+  - **Decoupled Scaling & Deployment**: In Docker Compose and Kubernetes, separate deployments run with customized resource limits and dedicated health probes.
+  - **Fault Isolation**: A spike in REST traffic or a failure in an API endpoint cannot crash active collaboration rooms.
 
 ---
 
-## Invariantes Decorrentes
+## Decision
 
-1. **Nunca** adicionar estado de salas ou instâncias em memória de `Y.Doc` ao `main.api.ts`.
-2. **Nunca** expor rotas HTTP REST em `main.collab.ts`.
-3. Manter a API REST 100% stateless e o Collab Server escalável via Redis Pub/Sub.
+Adopt the **Dual-Entrypoint Architecture** within the `backend/` repository, maintaining strictly isolated execution entrypoints:
+- `src/main.api.ts` for the REST API on port 3001.
+- `src/main.collab.ts` for the WebSocket Collab Server on port 3002.
+
+---
+
+## Resulting Invariants
+
+1. **Never** add in-memory room state or `Y.Doc` instances to `main.api.ts`.
+2. **Never** expose HTTP REST endpoints on `main.collab.ts`.
+3. Keep the REST API 100% stateless, and replicate Collab Server rooms across pods via Redis Pub/Sub.

@@ -8,12 +8,16 @@ You are an expert full-stack engineer and autonomous agent working on Whiteboard
 - `docs/`: Architecture specifications, ADRs, protocol docs, and task backlog.
 - Submodules: `backend` and `frontend` are independent git repositories.
 
-## Invariant Rules
-1. Never edit `frontend/src/shared/` directly. Always edit `backend/src/shared/` and run `make sync-shared`.
-2. Commit in submodule repos first before updating root pointers.
-3. Follow Conventional Commits (`feat(...)`, `fix(...)`, etc.).
-4. Never put board state in `main.api.ts` and never add HTTP routes in `main.collab.ts`.
-5. Maintain strict screen vs world coordinate separation in frontend canvas engine.
-6. Always run `make check` before concluding any task.
+## Non-Negotiable Invariants & Rules
+1. **Contracts**: Never edit `frontend/src/shared/` directly. Always edit `backend/src/shared/` and run `make sync-shared`.
+2. **Submodules**: Commit in submodule repos first before updating root pointers.
+3. **Commits**: Follow Conventional Commits (`feat(...)`, `fix(...)`, etc.) in lowercase imperative mood.
+4. **Architecture Boundaries**: Never put board state in `main.api.ts` and never add HTTP routes in `main.collab.ts`.
+5. **Canvas Math**: Maintain strict screen vs world coordinate separation via `viewport.screenToWorld()` and `viewport.worldToScreen()`.
+6. **Spatial Index**: Always synchronize `SpatialIndex` (RBush) on any element addition, modification, or deletion.
+7. **CRDT Origins**: Always pass `origin: store.localOrigin` to local Yjs transactions to isolate UndoManager.
+8. **Verification**: Always run `make check` before concluding any task.
+9. **No AI Signatures & Dead Code**: Never leave AI signatures, conversational comments, or blocks of commented-out dead code.
+10. **Language**: All technical documentation, code comments, and commit messages must be in **English**.
 
 See `AGENTS.md` and `docs/` for complete details.

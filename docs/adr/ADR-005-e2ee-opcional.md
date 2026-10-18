@@ -1,38 +1,38 @@
-# ADR-005 — Criptografia de Ponta a Ponta (E2EE) Opcional por Quadro
+# ADR-005 — Optional End-to-End Encryption (E2EE) per Board
 
-- **Status:** Proposta (Planejada para v2 / Épico 11)
-- **Data:** 2026-10-12
-- **Decisores:** Time de Arquitetura Whiteboard
-
----
-
-## Contexto & Problema
-
-Para ambientes corporativos com requisitos estritos de privacidade e conformidade (ex: dados médicos, segredos industriais ou conformidade regulatória), usuários podem desejar que nem mesmo o servidor do Whiteboard tenha acesso ao conteúdo visual ou textual desenhado no quadro.
-
-Precisávamos definir a viabilidade e a arquitetura para suportar Criptografia de Ponta a Ponta (E2EE) opcional sem quebrar a convergência do CRDT.
+- **Status:** Proposed (Scheduled for v2 / Epic 11)
+- **Date:** 2026-10-12
+- **Decision Makers:** Whiteboard Architecture Team
 
 ---
 
-## Alternativas Analisadas
+## Context & Problem
 
-### Alternativa A: E2EE Obrigatório Global em Todos os Quadros
-- **Desvantagens**:
-  - Impede recursos do servidor: validação autoritativa por Shadow Document, geração de prévias/thumbnails no backend, busca textual e auditoria administrativa.
-  - Perda de dados irreversível caso o usuário perca a chave/link criptográfico.
+For enterprise environments with strict confidentiality and regulatory compliance requirements (e.g., healthcare data, trade secrets, sensitive legal documents), users may require that even the server hosting the Whiteboard service cannot inspect or decrypt board drawings or text.
 
-### Alternativa B: E2EE Opcional por Quadro com Chave no Fragmento da URL (Escolhida para v2)
-- **Vantagens**:
-  - **Zero conhecimento do servidor**: A chave simétrica de criptografia (AES-GCM 256 bits) é colocada no fragmento da URL (após a `#`), que **nunca é transmitido ao servidor** em requisições HTTP ou WebSockets.
-  - Os clientes criptografam os deltas Yjs binários antes de transmiti-los via WebSocket.
-  - O servidor atua estritamente como relay cego de bytes cifrados e armazena blobs opacos no PostgreSQL.
-  - Quadros comuns continuam usufruindo da validação completa por Shadow Document, busca e renderização server-side.
-- **Desvantagens / Trade-offs aceitos para quadros E2EE**:
-  - Impossibilidade de validação de esquemas Zod pelo servidor em quadros E2EE.
-  - Geração de exportações PNG/SVG deve ocorrer estritamente no navegador do cliente.
+We needed to establish the feasibility and architecture for supporting optional End-to-End Encryption (E2EE) without breaking CRDT convergence.
 
 ---
 
-## Decisão
+## Considered Alternatives
 
-Adotar o **E2EE como recurso opcional por quadro** agendado para o roadmap v2 (Épico 11). Em quadros com E2EE ativo, a chave simétrica é preservada no fragmento de URL do cliente (`#key=...`), garantindo privacidade absoluta contra inspeção de terceiros ou comprometimento do servidor.
+### Alternative A: Mandatory Global E2EE for All Boards
+- **Cons**:
+  - Breaks core server capabilities: authoritative Shadow Document validation, server-side thumbnail generation, full-text search, and compliance auditing.
+  - Irreversible data loss if a user loses their encryption key or link.
+
+### Alternative B: Optional Per-Board E2EE with Key in URL Hash Fragment (Chosen for v2)
+- **Pros**:
+  - **Zero Server Knowledge**: The symmetric key (AES-GCM 256-bit) is placed in the URL hash fragment (`#key=...`), which is **never transmitted to the server** in HTTP or WebSocket requests.
+  - Clients encrypt binary Yjs updates locally before transmission over WebSockets.
+  - The server acts as a blind relay of encrypted binary blobs and stores opaque data in PostgreSQL.
+  - Standard non-E2EE boards retain full server-side validation, search, and export capabilities.
+- **Cons / Accepted Trade-offs for E2EE Boards**:
+  - The server cannot perform Zod schema validation on encrypted deltas.
+  - Image exports (PNG/SVG) must be performed strictly within the client browser.
+
+---
+
+## Decision
+
+Adopt **optional per-board E2EE** as an architectural capability scheduled for the v2 roadmap (Epic 11). For E2EE-enabled boards, the symmetric encryption key is preserved exclusively in the client's URL fragment (`#key=...`), ensuring absolute zero-knowledge confidentiality.

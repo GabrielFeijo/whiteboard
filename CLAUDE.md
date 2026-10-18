@@ -15,7 +15,7 @@ See [`AGENTS.md`](./AGENTS.md) for full architectural invariants, command refere
 - **Start Infrastructure**: `make deps` (PostgreSQL :5442, Redis :6379, MinIO :9000/:9001).
 - **Start All Services**: `make up` (or `make dev` for local background services).
 
-## Non-Negotiable Rules
+## Non-Negotiable Rules & Invariants
 
 1. **Shared Contract Single Source of Truth**:
    - `backend/src/shared/` is authoritative.
@@ -30,3 +30,12 @@ See [`AGENTS.md`](./AGENTS.md) for full architectural invariants, command refere
    - Keep REST API (`main.api.ts` on :3001) strictly stateless.
    - Keep Collab Server (`main.collab.ts` on :3002) dedicated to WebSocket real-time collaboration.
    - Assets are uploaded directly via S3 Presigned URLs, never transmitted over WebSocket.
+5. **No AI Signatures & Clean Comments**:
+   - Never add comments referring to AI tools or user prompts (`// Added by AI`, `// as requested`).
+   - Never leave blocks of commented-out dead code.
+   - Author all comments, commit messages, and documentation in **English**.
+6. **No Code Smells**:
+   - Never use `any` or `@ts-ignore`.
+   - Never mix screen and world coordinates in the canvas engine without explicit transformation (`screenToWorld`/`worldToScreen`).
+   - Always tag local Yjs CRDT mutations with `origin: store.localOrigin`.
+   - Always keep `SpatialIndex` (RBush) synchronized with canvas element changes.
