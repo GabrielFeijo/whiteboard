@@ -1,99 +1,72 @@
-# Guia de Desenvolvimento Agêntico — Whiteboard
+# Agent Guidelines — Whiteboard
 
-Este documento estabelece as regras, convenções, modelo mental e comandos essenciais para agentes de IA operando no repositório **Whiteboard**. Siga rigorosamente estas instruções para garantir autonomia segura, consistência e evitar regressões.
+This repository is a real-time collaborative infinite whiteboard powered by CRDT (Yjs), organized into two independent Git submodules.
 
----
+## Workspace Topology
 
-## 🗺️ Visão Geral e Topologia do Workspace
+- `backend/`: NestJS 11 dual-entrypoint service (REST API on port 3001, WebSocket Collab server on port 3002).
+- `frontend/`: Next.js 16 (App Router) + React 19 + custom 2D Canvas Engine on port 3000.
+- `docs/`: System architecture (`docs/architecture.md`), ADRs (`docs/adr/`), and atomic tasks (`docs/tasks/`).
+- `docker-compose.deps.yml`: Infrastructure services (PostgreSQL on 5442, Redis on 6379, MinIO on 9000/9001).
+- `Makefile`: Unified task execution and verification harness.
 
-O projeto é um quadro branco infinito colaborativo em tempo real baseado em **CRDT (Yjs)**, dividido em dois repositórios Git gerenciados como **Git Submodules**:
+## Local Ports & Services
 
-```text
-whiteboard/ (Repositório Raiz / Orquestrador)
-├── backend/                  # Git Submodule: API REST + Collab WebSocket Server (NestJS 11)
-├── frontend/                 # Git Submodule: Aplicação Web + Engine Canvas 2D (Next.js 16 + React 19)
-├── docs/                     # Backlog atômico (docs/tasks/), ADRs (docs/adr/) e arquitetura
-├── docker-compose.yml        # Orquestração completa local (Apps + Infraestrutura)
-├── docker-compose.deps.yml   # Apenas serviços de infraestrutura (Postgres, Redis, MinIO)
-└── Makefile                  # Comandos unificados de build, teste e verificação
-```
-
-### Serviços e Portas Locais
-| Serviço | Porta | Descrição |
+| Service | Address | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | `3000` | Next.js 16 App Router + Canvas Engine |
-| **API REST** | `3001` | NestJS REST API (`/v1/*`), OpenAPI Swagger em `/v1/docs` |
-| **Collab Server** | `3002` | NestJS WebSocket Server por sala (`ws://localhost:3002`) |
-| **PostgreSQL** | `5442` (host) → `5432` | Banco relacional persistido via Prisma |
-| **Redis** | `6379` | Cache, controle de sessões e canais pub/sub |
-| **MinIO Console** | `9001` | Dashboard S3 (usuário/senha padrão: `minio` / `minio12345`) |
-| **MinIO API** | `9000` | Object Storage compatível com S3 (bucket: `whiteboard-assets`) |
+| Frontend | `http://localhost:3000` | Web studio & interactive 2D canvas |
+| REST API | `http://localhost:3001` | Stateless REST API (`/v1/*`), OpenAPI Swagger (`/v1/docs`) |
+| Collab Server | `ws://localhost:3002` | Stateful WebSocket server managing active room docs |
+| PostgreSQL | `localhost:5442` (host) -> 5432 | Relational storage via Prisma |
+| Redis | `localhost:6379` | Sessions, cache, pub/sub channels |
+| MinIO Console | `http://localhost:9001` | S3 dashboard (`minio` / `minio12345`) |
+| MinIO API | `http://localhost:9000` | S3 object storage endpoint |
 
----
+## Core Agent Rules
 
-## ⚡ Regras de Ouro para Agentes
+### 1. Contract Single Source of Truth
+- `backend/src/shared/` is the authoritative source for all schemas, data types, and protocol definitions.
+- Never edit files in `frontend/src/shared/` directly.
+- When changing shared schemas or protocol:
+  1. Modify files in `backend/src/shared/`.
+  2. Run `make sync-shared` (or `npm --prefix frontend run sync:shared`).
+  3. Validate synchronization with `make sync-shared-check`.
 
-### 1. Fonte da Verdade dos Contratos (`shared/`)
-- **Regra:** O diretório `backend/src/shared/` é a **única fonte da verdade** para schemas Zod, tipos de dados e protocolo de WebSocket (conforme [ADR-000](docs/adr/ADR-000-dois-repos-e-shared-duplicado.md)).
-- **Nunca edite diretamente** os arquivos dentro de `frontend/src/shared/`.
-- Ao alterar ou estender contratos:
-  1. Edite `backend/src/shared/` (ex: `schema.ts`, `protocol.ts` ou `version.ts`).
-  2. Execute `make sync-shared` (ou `npm --prefix frontend run sync:shared`).
-  3. Valide a sincronização com `make sync-shared:check`.
+### 2. Git Submodules Protocol
+- `backend/` and `frontend/` are separate Git repositories.
+- Make commits inside the modified submodule repository first.
+- Always follow Conventional Commits (`feat(...)`, `fix(...)`, `refactor(...)`, etc.) as husky hooks enforce commitlint.
+- Update submodule commit pointers in the root repository:
+  `git add backend frontend && git commit -m "chore: update submodule pointers"`
 
-### 2. Fluxo com Git Submodules
-- `backend/` e `frontend/` são repositórios Git independentes.
-- Ao fazer alterações que afetem os subprojetos:
-  1. Faça o commit dentro do submodule correspondente (`backend/` ou `frontend/`).
-  2. Use sempre commits convencionais (`feat(...)`, `fix(...)`, `refactor(...)`, etc.), pois há hooks de `husky` e `commitlint` ativos.
-  3. No repositório raiz (`whiteboard/`), faça o commit atualizando o ponteiro dos submódulos afetados:
-     ```bash
-     git add backend frontend
-     git commit -m "chore: update submodule pointers"
-     ```
+### 3. Mandatory Verification Loop
+- Before concluding any task, always execute:
+  `make check`
+- `make check` runs:
+  - Contract synchronization verification (`sync:shared:check`).
+  - TypeScript type checking in both submodules (`tsc --noEmit`).
+  - ESLint in both submodules.
+  - Vitest test suites across backend and frontend.
+- For rapid iterations during active coding, use `make check-quick`.
 
-### 3. Ciclo de Verificação Obrigatório (Feedback Loop)
-- **Antes de concluir qualquer tarefa ou dar resposta final ao usuário**, execute:
-  ```bash
-  make check
-  ```
-  Este comando executa em lote:
-  - Verificação estática de tipos (`tsc --noEmit`) no backend e frontend.
-  - Linters (`eslint`) no backend e frontend.
-  - Testes unitários e de contrato (`vitest run`) no backend e frontend.
-  - Checagem de integridade de sincronização dos contratos (`sync:shared:check`).
+### 4. Backlog & Task Execution
+- Consult `docs/tasks/00-index.md` and the relevant epic file in `docs/tasks/` for requirements and dependencies.
+- Execute tasks atomically with accompanying test coverage.
+- Update task status from `⬜` to `✅` upon successful implementation and verification.
 
-### 4. Backlog e Ciclo de Vida de Tarefas
-- Consulte [`docs/tasks/00-index.md`](docs/tasks/00-index.md) e o arquivo de épico correspondente em `docs/tasks/` para entender requisitos e dependências.
-- Siga a abordagem atômica: uma tarefa por ciclo, mantendo cobertura de testes correspondente.
-- Atualize o status na tabela do documento de tasks de `⬜` para `✅` ao concluir a implementação e testes.
+## Command Reference
 
----
-
-## 🛠️ Comandos Mais Usados
-
-| Ação | Comando |
+| Command | Action |
 | :--- | :--- |
-| **Verificação Completa** | `make check` |
-| **Verificação Rápida (sem lint)** | `make check:quick` |
-| **Testes Unitários Backend + Frontend** | `make test` |
-| **Sincronizar Contratos** | `make sync-shared` |
-| **Conferir Drift de Contratos** | `make sync-shared:check` |
-| **Subir Infraestrutura Local** | `make deps` |
-| **Subir Todos os Containers** | `make up` |
-| **Ver Logs da Infraestrutura** | `make logs` |
-| **Gerar Cliente TypeScript OpenAPI** | `make gen-api` |
-
----
-
-## 🧠 Arquitetura Técnica em Poucas Linhas
-
-1. **Separação Stateless vs Stateful:**
-   - A API REST (`main.api.ts`) é totalmente stateless. Trata autenticação, gerenciamento de quadros, permissões RBAC e geração de URLs assinadas para S3.
-   - O Collab Server (`main.collab.ts`) é stateful em memória por sala de quadro. Mantém instâncias de `Y.Doc` ativas enquanto houver conexões, recebe updates binários do Yjs, valida quotas/schemas e descarrega snapshots no Postgres periodicamente.
-2. **CRDT no Frontend:**
-   - O canvas aplica transformações otimistas no cliente usando um `Y.Doc` local e persistência em IndexedDB (`y-indexeddb`), enviando deltas compactados via WebSocket.
-   - O servidor atua como autoridade para broadcasting e validação.
-3. **Desacoplamento e Segurança:**
-   - Tokens JWT curtos (15 min) + Refresh tokens em cookie HttpOnly com rotação opaca.
-   - Handshake do WebSocket usa tickets efêmeros de uso único (`wsTicket`) obtidos via endpoint REST seguro.
+| `make check` | Run full validation (contract check, typecheck, lint, tests) |
+| `make check-quick` | Fast validation (contract check, typecheck, tests) |
+| `make test` | Run all unit and contract tests |
+| `make typecheck` | Run TypeScript typecheck across both projects |
+| `make lint` | Run ESLint across both projects |
+| `make sync-shared` | Copy shared contracts from backend to frontend |
+| `make sync-shared-check` | Verify shared contract parity |
+| `make gen-api` | Generate frontend TypeScript client from backend OpenAPI spec |
+| `make deps` | Start infrastructure services (Postgres, Redis, MinIO) |
+| `make up` | Build and start all services via Docker Compose |
+| `make down` | Stop all Docker containers |
+| `make logs` | Tail Docker container logs |
