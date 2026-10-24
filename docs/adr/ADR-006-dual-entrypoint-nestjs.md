@@ -56,5 +56,5 @@ Adopt the **Dual-Entrypoint Architecture** within the `backend/` repository, mai
 ## Resulting Invariants
 
 1. **Never** add in-memory room state or `Y.Doc` instances to `main.api.ts`.
-2. **Never** expose HTTP REST endpoints on `main.collab.ts`.
+2. **Never** expose HTTP REST business endpoints (`/v1/*`) on `main.collab.ts`. The Collab Server is exclusively a WebSocket gateway; HTTP is reserved strictly for infrastructure observability probes (`/health/live`, `/health/ready`, `/metrics`) required by Kubernetes and Prometheus.
 3. Keep the REST API 100% stateless, and replicate Collab Server rooms across pods via Redis Pub/Sub.

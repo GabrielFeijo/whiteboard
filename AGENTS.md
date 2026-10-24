@@ -78,7 +78,7 @@ The following code smells are strictly prohibited across both submodules:
 - **Untagged CRDT Mutations**: Never mutate a shared Yjs `Y.Doc` without an explicit transaction origin (e.g., `store.localOrigin`). Failing to tag transactions causes infinite echo loops between UndoManager, WebSocket broadcasts, and persistence workers.
 - **Binary Assets over WebSockets**: Never transmit raw file bytes (images, PDFs) over the real-time WebSocket channel. Binary assets MUST be uploaded directly to S3/MinIO via Presigned PUT URLs.
 - **Bypassing Zod Validation**: Never apply external deltas directly to canonical documents without validating through the authoritative server Shadow Document (`ElementDataSchema`).
-- **Stateless/Stateful Boundary Pollution**: Never store in-memory room docs in `main.api.ts`, and never expose HTTP endpoints on `main.collab.ts`.
+- **Stateless/Stateful Boundary Pollution**: Never store in-memory room docs in `main.api.ts`, and never expose HTTP REST endpoints (`/v1/*`) on `main.collab.ts`.
 - **N+1 Database Queries**: Ensure Prisma queries fetch relational data using proper `include` or explicit batching, and maintain indexes on foreign keys (`board_id`, `user_id`, `token_hash`).
 - **Non-Standard Database Schema Identifiers**: Never define PostgreSQL tables or columns in PascalCase or camelCase. All relational tables and columns must use `snake_case` (`table_name`, `column_name`) mapped via Prisma `@@map("table_name")` and `@map("column_name")`.
 
@@ -120,7 +120,7 @@ All commits across the root repository and both submodules must strictly adhere 
 | Area | Invariant Rule | Rationale |
 | :--- | :--- | :--- |
 | **Backend API** | Never hold in-memory board state in `main.api.ts` | The REST API must remain strictly stateless and horizontally scalable behind load balancers. |
-| **Collab Server** | Never expose HTTP REST endpoints on `main.collab.ts` | The Collab Server is exclusively a stateful WebSocket server (`ws://localhost:3002/collab`). |
+| **Collab Server** | Never expose HTTP REST endpoints (`/v1/*`) on `main.collab.ts` | The Collab Server is exclusively a stateful WebSocket server (`ws://localhost:3002/collab`). HTTP is reserved strictly for infrastructure probes (`/health`, `/metrics`). |
 | **CRDT Schema** | Every element MUST contain valid `createdBy`, `id`, `type`, `x`, `y`, `w`, `h`, `z`, and `style` (`fill`, `stroke`, `strokeWidth`, `opacity`) | The Collab Server maintains a Zod shadow doc validator. Incomplete elements will be rejected and dropped. |
 | **Transactions** | Always tag local CRDT edits with distinct origin (e.g. `store.localOrigin`) | Prevents infinite loop echoes between local UndoManager, WebSocket updates, and persistence worker. |
 | **Canvas Coordinates** | Strictly separate Screen Coordinates (pixels relative to canvas element) from World Coordinates (infinite space) | Rendering and hit testing require explicit transformation through `viewport.screenToWorld()` and `viewport.worldToScreen()`. |
