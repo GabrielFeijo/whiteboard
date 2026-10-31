@@ -166,7 +166,7 @@ All commits across the root repository and both submodules must strictly adhere 
 - **Contract Drift (`sync:shared:check` fails)**:
   Run `make sync-shared`. Remember: edit in `backend/src/shared/`, never in `frontend/src/shared/`.
 - **WebSocket Ticket Rejected / 401**:
-  WebSocket handshakes require an ephemeral ticket acquired via `POST /v1/boards/:id/collab-token`. Tickets expire after 30 seconds.
+  WebSocket handshakes require an ephemeral ticket acquired via `POST /v1/boards/:id/ws-ticket`. Tickets expire after 30 seconds.
 - **Detached HEAD in Submodules**:
   Ensure submodules are on branch `main`: `git -C frontend checkout main && git -C backend checkout main`.
 
