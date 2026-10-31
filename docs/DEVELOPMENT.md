@@ -107,12 +107,14 @@ When running `npm --prefix backend run db:seed`, the database is provisioned wit
 
 | Email | Password | Role / Access |
 | :--- | :--- | :--- |
-| `admin@whiteboard.local` | `Admin123!` | Default Owner of sample boards |
-| `editor@whiteboard.local` | `Editor123!` | Collaborator with Editor permissions |
-| `viewer@whiteboard.local` | `Viewer123!` | Read-only collaborator |
+| `owner@whiteboard.local` | `Password123!` | Default Owner of sample boards |
+| `alice@whiteboard.local` | `Password123!` | Collaborator with Editor permissions |
+| `bob@whiteboard.local` | `Password123!` | Collaborator with Editor permissions |
+| `carol@whiteboard.local` | `Password123!` | Read-only collaborator (Viewer) |
 
 Sample boards:
-- **Quadro de Demonstração Geral** (`boardId: cmvdzbcmv000j2dc41hge5xfx`)
+- **Microservices Architecture — E-Commerce Platform** (`boardId: cmvwobcv100042d27hrlvahy9`)
+- **Q3 Product Roadmap & Ideation** (`boardId: cmvwobcv200062d27q9x7w8k1`)
 
 ---
 
@@ -128,10 +130,9 @@ COLLAB_PORT=3002
 CORS_ORIGIN=http://localhost:3000
 
 # Authentication & Security
-JWT_SECRET=super-secret-jwt-key-for-local-dev-min-32-chars
-JWT_ACCESS_EXPIRES_IN=15m
-REFRESH_TOKEN_EXPIRES_IN=7d
-COOKIE_SECRET=local-dev-cookie-secret-min-32-chars
+JWT_ACCESS_SECRET=dev-access-secret-must-be-at-least-32-characters-long
+JWT_ACCESS_TTL=15m
+REFRESH_TOKEN_TTL_DAYS=7
 
 # Database & Cache
 DATABASE_URL=postgresql://whiteboard:whiteboard123@localhost:5442/whiteboard_db?schema=public
@@ -141,7 +142,7 @@ REDIS_URL=redis://localhost:6379
 S3_ENDPOINT=http://localhost:9000
 S3_PUBLIC_ENDPOINT=http://localhost:9000
 S3_REGION=us-east-1
-S3_BUCKET_NAME=whiteboard-assets
+S3_BUCKET=whiteboard-assets
 S3_ACCESS_KEY=minio
 S3_SECRET_KEY=minio12345
 ```
@@ -200,7 +201,7 @@ NEXT_PUBLIC_S3_ENDPOINT=http://localhost:9000
 ### WebSocket connection fails (`401 Unauthorized` or handshake timeout)
 - Ensure the Collab Server is running on `:3002`.
 - Verify the board ID exists in the database.
-- Collab tickets expire in 30 seconds. If a connection drops, the frontend automatically requests a fresh ticket via `POST /v1/boards/:id/collab-token`.
+- Collab tickets expire in 30 seconds. If a connection drops, the frontend automatically requests a fresh ticket via `POST /v1/boards/:id/ws-ticket`.
 
 ### Git index lock error
 - If running commands in isolated or sandboxed environments produces `fatal: Unable to create '.git/index.lock': Read-only file system`, execute the command with bypass permission or verify file permissions on `.git/`.

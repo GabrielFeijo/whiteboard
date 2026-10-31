@@ -1,7 +1,10 @@
-.PHONY: env up down deps logs ps reset config check check-quick test typecheck lint format sync-shared sync-shared-check gen-api
+.PHONY: env dev up down deps logs ps reset config check check-quick test typecheck lint format sync-shared sync-shared-check gen-api
 
 env:
 	@test -f .env || cp .env.example .env
+
+dev: deps
+	@npm --prefix backend run start:dev & npm --prefix frontend run dev & wait
 
 up: env
 	docker compose up -d --build
